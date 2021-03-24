@@ -18,8 +18,8 @@ provider:
             - Fn::GetAtt: [ WorkerQueue, Arn ]
         - Effect: Allow
           Action:
-            - s3:*    #Get*
-          Resource: "*"          #"arn:aws:s3:::s3-to-sqs-serverless-training"
+            - s3:Get*
+          Resource: "arn:aws:s3:::s3-to-sqs-serverless-training/*"
 
 
 functions:
