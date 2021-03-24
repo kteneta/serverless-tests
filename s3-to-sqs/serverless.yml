@@ -1,0 +1,57 @@
+service: s3-to-sqs
+
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: python3.8
+  lambdaHashingVersion: 20201221
+  stage: dev
+  region: us-east-1
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - sqs:SendMessage
+          Resource:
+            - Fn::GetAtt: [ WorkerQueue, Arn ]
+        - Effect: Allow
+          Action:
+            - s3:*    #Get*
+          Resource: "*"          #"arn:aws:s3:::s3-to-sqs-serverless-training"
+
+
+functions:
+  producer:
+    handler: src/handler.producer
+    events:
+     - s3:
+          bucket: s3-to-sqs-serverless-training 
+          event: s3:ObjectCreated:*
+    environment:
+      QUEUE_URL:
+        Ref: WorkerQueue
+      S3_URL: s3-to-sqs-serverless-training
+
+
+resources:
+  Resources:
+    WorkerQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: workerQueue-${self:provider.stage}
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+              - WorkerDLQ
+              - Arn
+          maxReceiveCount: 5
+    WorkerDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: workerDlq-${self:provider.stage}
+    # s3Bucket:
+    #   Type: AWS::S3::Bucket
+    #   Properties:
+    #     BucketName: s3-to-sqs-serverless-training    
