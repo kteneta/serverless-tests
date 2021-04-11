@@ -87,12 +87,42 @@ class CdkAppStack(cdk.Stack):
         # ---------------------------------------------------------------
         # Create an API GW Rest API
         
+        # CRUD lambda functions
+        api_get_lambda = _lambda.Function(self, "api_get_lambda",
+                                              runtime=_lambda.Runtime.PYTHON_3_8,
+                                              handler="get.get",
+                                              code=_lambda.Code.asset("./src/rest-api"))
+        api_get_lambda.add_environment("TABLE_NAME", dynamo_table.table_name)
+        dynamo_table.grant_read_data(api_get_lambda)
+
+        
+        api_post_lambda = _lambda.Function(self, "api_post_lambda",
+                                              runtime=_lambda.Runtime.PYTHON_3_8,
+                                              handler="create.create",
+                                              code=_lambda.Code.asset("./src/rest-api"))
+        api_post_lambda.add_environment("TABLE_NAME", dynamo_table.table_name)
+        dynamo_table.grant_write_data(api_post_lambda)
+
+
+        api_delete_lambda = _lambda.Function(self, "api_delete_lambda",
+                                              runtime=_lambda.Runtime.PYTHON_3_8,
+                                              handler="delete.delete",
+                                              code=_lambda.Code.asset("./src/rest-api"))
+        api_delete_lambda.add_environment("TABLE_NAME", dynamo_table.table_name)
+        dynamo_table.grant_write_data(api_delete_lambda)       
+
+
+
         base_api = _apigw.RestApi(self, 'cdk-api',
         rest_api_name='cdk-api')
 
-        base_path = base_api.root.add_resource('resource')
+        base_path = base_api.root.add_resource('item')
         
-        resource_lambda_integration = _apigw.LambdaIntegration(get_from_dynamo_lambda, proxy=True)
+        post_item_lambda_integration = _apigw.LambdaIntegration(get_from_dynamo_lambda, proxy=True)
+        get_item_lambda_integration = _apigw.LambdaIntegration(get_from_dynamo_lambda, proxy=True)
+        delete_item_lambda_integration = _apigw.LambdaIntegration(get_from_dynamo_lambda, proxy=True)
         
-        base_path.add_method('GET', resource_lambda_integration)
-        # ----------------------------------------------------------------
+        base_path.add_method('GET', get_item_lambda_integration)
+        base_path.add_method('POST', post_item_lambda_integration)
+        base_path.add_method('DELETE', delete_item_lambda_integration)
+        # ---------------------------------------------------------------- 
