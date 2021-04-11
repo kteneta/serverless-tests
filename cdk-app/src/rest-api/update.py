@@ -3,7 +3,7 @@ import time
 import logging
 import os
 
-from src import decimalencoder
+import decimalencoder
 import boto3
 dynamodb = boto3.resource('dynamodb')
 

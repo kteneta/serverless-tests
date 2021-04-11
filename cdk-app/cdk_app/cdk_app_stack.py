@@ -38,7 +38,7 @@ class CdkAppStack(cdk.Stack):
                                               handler="dynamo_write.lambda_handler",
                                               code=_lambda.Code.asset("./src"))
 
-        write_to_dynamo_lambda.add_environment("TABLE_NAME", dynamo_table.table_name)
+        write_to_dynamo_lambda.add_environment("DYNAMODB_TABLE", dynamo_table.table_name)
 
         # grant permission to lambda to write to demo table
         dynamo_table.grant_write_data(write_to_dynamo_lambda)
@@ -49,7 +49,7 @@ class CdkAppStack(cdk.Stack):
                                               handler="dynamo_get.lambda_handler",
                                               code=_lambda.Code.asset("./src"))
 
-        get_from_dynamo_lambda.add_environment("TABLE_NAME", dynamo_table.table_name)
+        get_from_dynamo_lambda.add_environment("DYNAMODB_TABLE", dynamo_table.table_name)
 
         # grant permission to lambda to read from demo table
         dynamo_table.grant_read_data(get_from_dynamo_lambda)
@@ -90,9 +90,9 @@ class CdkAppStack(cdk.Stack):
         # CRUD lambda functions
         api_get_lambda = _lambda.Function(self, "api_get_lambda",
                                               runtime=_lambda.Runtime.PYTHON_3_8,
-                                              handler="get.get",
+                                              handler="list.list",
                                               code=_lambda.Code.asset("./src/rest-api"))
-        api_get_lambda.add_environment("TABLE_NAME", dynamo_table.table_name)
+        api_get_lambda.add_environment("DYNAMODB_TABLE", dynamo_table.table_name)
         dynamo_table.grant_read_data(api_get_lambda)
 
         
@@ -100,7 +100,7 @@ class CdkAppStack(cdk.Stack):
                                               runtime=_lambda.Runtime.PYTHON_3_8,
                                               handler="create.create",
                                               code=_lambda.Code.asset("./src/rest-api"))
-        api_post_lambda.add_environment("TABLE_NAME", dynamo_table.table_name)
+        api_post_lambda.add_environment("DYNAMODB_TABLE", dynamo_table.table_name)
         dynamo_table.grant_write_data(api_post_lambda)
 
 
@@ -108,7 +108,7 @@ class CdkAppStack(cdk.Stack):
                                               runtime=_lambda.Runtime.PYTHON_3_8,
                                               handler="delete.delete",
                                               code=_lambda.Code.asset("./src/rest-api"))
-        api_delete_lambda.add_environment("TABLE_NAME", dynamo_table.table_name)
+        api_delete_lambda.add_environment("DYNAMODB_TABLE", dynamo_table.table_name)
         dynamo_table.grant_write_data(api_delete_lambda)       
 
 
@@ -118,9 +118,9 @@ class CdkAppStack(cdk.Stack):
 
         base_path = base_api.root.add_resource('item')
         
-        post_item_lambda_integration = _apigw.LambdaIntegration(get_from_dynamo_lambda, proxy=True)
-        get_item_lambda_integration = _apigw.LambdaIntegration(get_from_dynamo_lambda, proxy=True)
-        delete_item_lambda_integration = _apigw.LambdaIntegration(get_from_dynamo_lambda, proxy=True)
+        post_item_lambda_integration = _apigw.LambdaIntegration(api_post_lambda, proxy=True)
+        get_item_lambda_integration = _apigw.LambdaIntegration(api_get_lambda, proxy=True)
+        delete_item_lambda_integration = _apigw.LambdaIntegration(api_delete_lambda, proxy=True)
         
         base_path.add_method('GET', get_item_lambda_integration)
         base_path.add_method('POST', post_item_lambda_integration)

@@ -1,7 +1,7 @@
 import os
 import json
 
-from src import decimalencoder
+from rest-api import decimalencoder
 import boto3
 dynamodb = boto3.resource('dynamodb')
 
