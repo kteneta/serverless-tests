@@ -1,0 +1,28 @@
+service: sqs-dynamo
+
+frameworkVersion: '2'
+
+
+provider:
+  name: aws
+  runtime: python3.8
+  lambdaHashingVersion: 20201221
+  stage: dev
+  region: us-east-1
+  environment:
+    DYNAMODB_TABLE: ${cf:rest-api-dev.DynamoTableName}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+          Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+
+functions:
+  consumer:
+    handler: src/handler.consumer
+    events:
+      - sqs:
+          batchSize: 1
+          arn: ${cf:s3-to-sqs-dev.QueueARN}

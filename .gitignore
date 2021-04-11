@@ -151,3 +151,9 @@ var/
 .serverless
 
 set_credentials.sh
+
+
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out

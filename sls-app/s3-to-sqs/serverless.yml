@@ -33,15 +33,6 @@ functions:
       QUEUE_URL:
         Ref: WorkerQueue
       S3_URL: s3-to-sqs-serverless-training
-  consumer:
-    handler: src/handler.consumer
-    events:
-      - sqs:
-          batchSize: 1
-          arn:
-            Fn::GetAtt:
-              - WorkerQueue
-              - Arn
 
 
 
@@ -61,7 +52,9 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: workerDlq-${self:provider.stage}
-    # s3Bucket:
-    #   Type: AWS::S3::Bucket
-    #   Properties:
-    #     BucketName: s3-to-sqs-serverless-training    
+  Outputs:
+    QueueARN:
+      Value: 
+        Fn::GetAtt: [WorkerQueue, Arn]
+      Export:
+        Name: QueueARN
